@@ -1,0 +1,323 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-outfit);
+  --font-secondary: var(--font-roboto);
+  --font-mono: var(--font-geist-mono);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-tertiary: var(--brand-tertiary);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-variant: var(--surface-variant);
+  --color-secondary-container: var(--secondary-container);
+  --color-error: var(--error);
+  --color-tab-track: var(--tab-track);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-error-container: var(--error-container);
+  --color-modal-border: var(--modal-border);
+  --color-modal-surface: var(--modal-surface);
+  --color-label: var(--label);
+  --color-grey-1: var(--grey-1);
+  --color-grey-5: var(--grey-5);
+  --color-filter-text: var(--filter-text);
+  --color-chat-bubble: var(--chat-bubble);
+  --color-chart-green: var(--chart-green);
+  --color-chart-orange: var(--chart-orange);
+  --color-chart-red: var(--chart-red);
+  --color-chart-lime: var(--chart-lime);
+  --color-primary-container: var(--primary-container);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-scheme-primary: var(--scheme-primary);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-text-black: var(--text-black);
+  --color-heading: var(--heading);
+  --color-board: var(--board);
+  --color-stat-score: var(--stat-score);
+  --color-stat-games: var(--stat-games);
+  --color-stat-mcqs: var(--stat-mcqs);
+  --color-streak-hero: var(--streak-hero);
+  --color-streak-hero-foreground: var(--streak-hero-foreground);
+  --color-streak-cell: var(--streak-cell);
+  --color-streak-from: var(--streak-from);
+  --color-streak-to: var(--streak-to);
+  --color-arena-ring: var(--arena-ring);
+  --radius-card: 0.75rem;
+  --radius-badge: 0.411rem;
+  --radius-cell: 0.347rem;
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Parhai.pk brand palette (Figma: Schemes / Text / Stroke variables) */
+  --brand: #1a8049;
+  --brand-foreground: #ffffff;
+  --brand-secondary: #4f6353;
+  --brand-tertiary: #3a646f;
+  --surface-bright: #f6fbf3;
+  --surface-variant: #dce5db;
+  --secondary-container: #d2e8d4;
+  --error: #ba1a1a;
+  --primary-container: #b1f1c2;
+  --primary-fixed-dim: #95d5a7;
+  --scheme-primary: #2d6a45;
+  --secondary-fixed-dim: #b6ccb9;
+  --tertiary-fixed-dim: #a2cdda;
+  --on-primary-fixed: #00210e;
+  --outline: #717971;
+  --outline-variant: #c0c9bf;
+  --text-black: #181d18;
+  --heading: #21272a;
+  --board: #f9f9f9;
+
+  /* Student dashboard */
+  --stat-score: rgb(189 45 48 / 68%);
+  --stat-games: #d7ac01;
+  --stat-mcqs: #95d5a7;
+  --streak-hero: #ecf9f3;
+  --streak-hero-foreground: #5e5e5e;
+  --streak-cell: #f3f7f5;
+  --streak-from: #ffab4b;
+  --streak-to: #ffe551;
+  --arena-ring: #6cd3fa;
+  --tab-track: #e8f6e8;
+  --tertiary-fixed: #beeaf7;
+  --on-tertiary-container: #214c57;
+  --error-container: #ffdad6;
+  --modal-border: #dde1e6;
+  --modal-surface: #fcfefc;
+  --label: #43484b;
+  --grey-1: #333333;
+  --grey-5: #e0e0e0;
+  --filter-text: #384b3d;
+  --chat-bubble: #f7f7f7;
+  --chart-green: #5eb17f;
+  --chart-orange: #ffb663;
+  --chart-red: #c86e6e;
+  --chart-lime: #e5f973;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme {
+  /* Figma effect styles: Drop Shadow/100, /200, /300 + dashboard panels */
+  --shadow-ds-100: 0 1px 4px 0 rgb(12 12 13 / 5%);
+  --shadow-ds-200: 0 1px 4px 0 rgb(12 12 13 / 10%), 0 1px 4px 0 rgb(12 12 13 / 5%);
+  --shadow-ds-300: 0 4px 4px -1px rgb(12 12 13 / 10%), 0 4px 4px -1px rgb(12 12 13 / 5%);
+  --shadow-panel: 0 1px 5.3px 0 rgb(58 100 111 / 8%);
+  --shadow-card: 0 1px 16.9px 0 rgb(12 12 13 / 6%);
+  --shadow-tile: 0 4px 4px 0 rgb(0 0 0 / 4%);
+}
+
+/* Gradients from Figma: banner, AI card, AI page, chat area, role chip, CTA, upload tile, profile card, game tile */
+@utility bg-welcome-banner {
+  background-image: linear-gradient(
+    -29.46deg,
+    rgb(122 130 77) 5.7574%,
+    rgb(59 134 88) 57.575%,
+    var(--brand-tertiary) 107.56%
+  );
+}
+
+@utility bg-assistant-card {
+  background-image: linear-gradient(
+    119.18deg,
+    var(--brand-tertiary) 7.5565%,
+    rgb(95 103 52) 9.513%,
+    rgb(124 169 136) 51.878%,
+    var(--brand-tertiary) 111.31%
+  );
+}
+
+@utility bg-assistant-banner {
+  background-image: linear-gradient(
+    153.15deg,
+    var(--brand-tertiary) 7.5565%,
+    rgb(95 103 52) 9.513%,
+    rgb(124 169 136) 51.878%,
+    var(--brand-tertiary) 111.31%
+  );
+}
+
+@utility bg-assistant-avatar {
+  background-image: linear-gradient(
+    102.51deg,
+    var(--brand-tertiary) 7.5565%,
+    rgb(95 103 52) 9.513%,
+    rgb(124 169 136) 51.878%,
+    var(--brand-tertiary) 111.31%
+  );
+}
+
+@utility bg-chat-area {
+  background-image: linear-gradient(
+    to bottom,
+    rgb(114 219 155 / 20%),
+    rgb(132 196 157 / 20%) 50%,
+    rgb(202 212 157 / 20%)
+  );
+}
+
+@utility bg-cta-gradient {
+  background-image: linear-gradient(
+    130.56deg,
+    var(--brand-tertiary) 7.5565%,
+    rgb(95 103 52) 52.953%,
+    var(--scheme-primary) 92.185%,
+    var(--brand-tertiary) 111.31%
+  );
+}
+
+@utility bg-upload-tile {
+  background-image: linear-gradient(
+    102.61deg,
+    var(--brand-tertiary) 7.5565%,
+    rgb(95 103 52) 9.513%,
+    var(--scheme-primary) 51.878%,
+    var(--brand-tertiary) 111.31%
+  );
+}
+
+@utility bg-profile-card {
+  background-image: linear-gradient(
+    22.49deg,
+    rgb(95 103 52) 5.5134%,
+    rgb(124 169 136) 69.212%,
+    var(--brand-tertiary) 131.29%
+  );
+}
+
+@utility bg-role-chip-active {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 42%), rgb(255 255 255 / 42%)),
+    linear-gradient(rgb(132 196 157 / 24%), rgb(132 196 157 / 24%));
+}
+
+@utility bg-game-tile {
+  background-color: rgb(45 106 69 / 14%);
+  background-image: linear-gradient(rgb(255 255 255 / 62%), rgb(255 255 255 / 62%));
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
