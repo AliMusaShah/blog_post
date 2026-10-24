@@ -9,7 +9,7 @@ export type AuthState = {
   logout: () => void;
 };
 
-export type UserRole = "student" | "teacher";
+export type UserRole = "student" | "teacher" | "admin";
 
 export type RoleOption = {
   value: UserRole;
