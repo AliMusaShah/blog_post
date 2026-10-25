@@ -20,7 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <div className="flex min-h-svh flex-1 flex-col">{children}</div>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
