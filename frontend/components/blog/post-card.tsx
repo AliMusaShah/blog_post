@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { MessageSquare } from "lucide-react";
 
 import { Avatar } from "@/components/blog/avatar";
-import { commentCount, type Post } from "@/data/mock-data";
 import { formatDate, previewText } from "@/lib/format";
+import type { Post } from "@/lib/api/types";
 import { useFeedUi } from "@/store/feed-ui-store";
+import { MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 function PostCard({ post }: { post: Post }) {
   const router = useRouter();
   const setTag = useFeedUi((state) => state.setTag);
-  const count = commentCount(post.id);
+  const count = post.commentCount;
 
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md">

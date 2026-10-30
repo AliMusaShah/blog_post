@@ -1,19 +1,11 @@
-export type User = { id: number; username: string };
+import type { User } from "@/lib/api/types";
+
+export type { User };
 
 export type AuthState = {
   user: User | null;
   access: string | null;
-  refresh: string | null;
-  setAuth: (data: { user?: User; access: string; refresh?: string }) => void;
-  setAccess: (access: string, refresh?: string) => void;
+  setAuth: (data: { user: User; access: string }) => void;
+  setUser: (user: User) => void;
   logout: () => void;
-};
-
-export type UserRole = "student" | "teacher" | "admin";
-
-export type RoleOption = {
-  value: UserRole;
-  label: string;
-  iconSrc: string;
-  iconClassName: string;
 };

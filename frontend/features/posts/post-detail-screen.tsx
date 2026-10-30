@@ -4,48 +4,57 @@ import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { ArticleSkeleton } from "@/components/blog/article-skeleton";
 import { Avatar } from "@/components/blog/avatar";
 import { CommentSection } from "@/components/blog/comment-section";
 import { DeletePostDialog } from "@/components/blog/delete-post-dialog";
+import { LoadError } from "@/components/blog/load-error";
+import { NotFoundView } from "@/components/blog/not-found-view";
 import { buttonVariants } from "@/components/ui/button";
-import { currentUser, getPost } from "@/data/mock-data";
+import { useAuthStore } from "@/features/auth/store/auth-store";
+import { apiErrorMessages, isNotFound } from "@/lib/api/error";
+import { useDeletePost, usePost } from "@/lib/api/queries";
 import { formatDate } from "@/lib/format";
 import { useFeedUi } from "@/store/feed-ui-store";
 
 function PostDetailScreen({ postId }: { postId: string }) {
-  const post = getPost(postId);
   const router = useRouter();
+  const postQuery = usePost(postId);
+  const remove = useDeletePost();
+  const user = useAuthStore((state) => state.user);
   const setTag = useFeedUi((state) => state.setTag);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [removed, setRemoved] = useState(false);
 
   useLayoutEffect(() => {
     return () => setDialogOpen(false);
   }, []);
 
-  if (!post) return null;
-
-  const canModerate =
-    currentUser.role === "ADMIN" || currentUser.id === post.author.id;
-
-  if (removed) {
+  if (postQuery.isLoading) return <ArticleSkeleton />;
+  if (isNotFound(postQuery.error)) return <NotFoundView />;
+  if (postQuery.isError || !postQuery.data) {
     return (
-      <div className="mx-auto w-full max-w-2xl px-4 py-16 text-center">
-        <h1 className="font-serif text-4xl tracking-tight">Post deleted</h1>
-        <p className="mt-3 text-muted-foreground">
-          This preview removed the post and its comments. Nothing was sent to a server.
-        </p>
-        <Link
-          href="/"
-          className={buttonVariants({ className: "mt-8 h-10 px-4" })}
-        >
-          Back to the feed
-        </Link>
-      </div>
+      <LoadError
+        title="Could not load this post"
+        messages={apiErrorMessages(postQuery.error)}
+        onRetry={() => postQuery.refetch()}
+      />
     );
   }
 
+  const post = postQuery.data;
+  const canModerate = user?.role === "ADMIN" || user?.id === post.author.id;
   const paragraphs = post.content.split("\n\n");
+
+  async function confirmDelete() {
+    try {
+      await remove.mutateAsync(post.id);
+      setDialogOpen(false);
+      router.push("/");
+      router.refresh();
+    } catch {
+      // The dialog renders the mutation error.
+    }
+  }
 
   return (
     <article className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
@@ -77,22 +86,24 @@ function PostDetailScreen({ postId }: { postId: string }) {
           </p>
         </div>
       </div>
-      <ul className="mt-5 flex flex-wrap gap-2" aria-label="Tags">
-        {post.tags.map((tag) => (
-          <li key={tag}>
-            <button
-              type="button"
-              className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
-              onClick={() => {
-                setTag(tag);
-                router.push("/");
-              }}
-            >
-              {tag}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {post.tags.length > 0 ? (
+        <ul className="mt-5 flex flex-wrap gap-2" aria-label="Tags">
+          {post.tags.map((tag) => (
+            <li key={tag}>
+              <button
+                type="button"
+                className="rounded-full bg-muted px-3 py-1 text-sm font-medium text-foreground hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
+                onClick={() => {
+                  setTag(tag);
+                  router.push("/");
+                }}
+              >
+                {tag}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <Link
         href={`/posts/${post.id}/chat`}
         className="mt-6 inline-flex h-10 items-center rounded-lg px-3 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
@@ -100,8 +111,8 @@ function PostDetailScreen({ postId }: { postId: string }) {
         Ask the assistant about this post
       </Link>
       <div className="mt-8 space-y-6 font-serif text-lg leading-8 text-foreground">
-        {paragraphs.map((paragraph) => (
-          <p key={paragraph.slice(0, 24)}>{paragraph}</p>
+        {paragraphs.map((paragraph, index) => (
+          <p key={`${index}-${paragraph.slice(0, 24)}`}>{paragraph}</p>
         ))}
       </div>
       {canModerate ? (
@@ -124,11 +135,16 @@ function PostDetailScreen({ postId }: { postId: string }) {
           </button>
         </div>
       ) : null}
-      <CommentSection postId={post.id} />
+      <CommentSection comments={post.comments ?? []} />
       <DeletePostDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onConfirm={() => setRemoved(true)}
+        pending={remove.isPending}
+        messages={remove.isError ? apiErrorMessages(remove.error) : []}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) remove.reset();
+        }}
+        onConfirm={confirmDelete}
       />
     </article>
   );

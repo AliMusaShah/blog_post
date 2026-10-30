@@ -9,7 +9,8 @@ import { Logo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { UserMenu } from "@/components/layout/user-menu";
 import { buttonVariants } from "@/components/ui/button";
-import { currentUser } from "@/data/mock-data";
+import { useAuthStore } from "@/features/auth/store/auth-store";
+import { useAuthReady } from "@/features/auth/use-auth-ready";
 import { useFeedUi } from "@/store/feed-ui-store";
 
 function SearchField({ id }: { id: string }) {
@@ -49,6 +50,17 @@ function SearchField({ id }: { id: string }) {
 function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuId = useId();
+  const ready = useAuthReady();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const router = useRouter();
+
+  function signOut() {
+    logout();
+    setMenuOpen(false);
+    router.push("/login");
+    router.refresh();
+  }
 
   useLayoutEffect(() => {
     return () => setMenuOpen(false);
@@ -78,7 +90,7 @@ function SiteHeader() {
           >
             Assistant
           </Link>
-          {currentUser.role === "ADMIN" ? (
+          {ready && user?.role === "ADMIN" ? (
             <Link
               href="/admin"
               className="rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
@@ -86,13 +98,25 @@ function SiteHeader() {
               Admin
             </Link>
           ) : null}
-          <Link
-            href="/posts/new"
-            className={buttonVariants({ className: "h-10 px-4" })}
-          >
-            Write post
-          </Link>
-          <UserMenu />
+          {ready && user ? (
+            <Link
+              href="/posts/new"
+              className={buttonVariants({ className: "h-10 px-4" })}
+            >
+              Write post
+            </Link>
+          ) : null}
+          {ready ? (
+            user ? (
+              <UserMenu />
+            ) : (
+              <Link href="/login" className={buttonVariants({ className: "h-10 px-4" })}>
+                Log in
+              </Link>
+            )
+          ) : (
+            <span className="inline-block h-10 w-24" aria-hidden="true" />
+          )}
         </div>
         <div className="ml-auto flex items-center gap-1 md:hidden">
           <ThemeToggle />
@@ -123,14 +147,16 @@ function SiteHeader() {
             >
               Assistant
             </Link>
-            <Link
-              href="/posts/new"
-              className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
-              onClick={() => setMenuOpen(false)}
-            >
-              Write post
-            </Link>
-            {currentUser.role === "ADMIN" ? (
+            {user ? (
+              <Link
+                href="/posts/new"
+                className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
+                onClick={() => setMenuOpen(false)}
+              >
+                Write post
+              </Link>
+            ) : null}
+            {user?.role === "ADMIN" ? (
               <Link
                 href="/admin"
                 className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
@@ -139,20 +165,32 @@ function SiteHeader() {
                 Admin
               </Link>
             ) : null}
-            <Link
-              href={`/users/${currentUser.id}`}
-              className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
-              onClick={() => setMenuOpen(false)}
-            >
-              Profile
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
-              onClick={() => setMenuOpen(false)}
-            >
-              Log out
-            </Link>
+            {user ? (
+              <Link
+                href={`/users/${user.id}`}
+                className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
+                onClick={() => setMenuOpen(false)}
+              >
+                Profile
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
+                onClick={() => setMenuOpen(false)}
+              >
+                Log in
+              </Link>
+            )}
+            {user ? (
+              <button
+                type="button"
+                className="rounded-lg px-2 py-2 text-left text-sm font-medium hover:bg-muted"
+                onClick={signOut}
+              >
+                Log out
+              </button>
+            ) : null}
           </nav>
         </div>
       ) : null}

@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
+const backendOrigin = process.env.BACKEND_URL ?? "http://127.0.0.1:3000";
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    return [
+      {
+        source: "/backend/:path*",
+        destination: `${backendOrigin}/:path*`,
+      },
+    ];
+  },
   experimental: {
     agentFeedback: true,
   },

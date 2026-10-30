@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 
+import { ApiAlert } from "@/components/blog/api-alert";
 import { EmptyFeed } from "@/components/blog/empty-feed";
+import { FeedSkeleton } from "@/components/blog/feed-skeleton";
 import { PaginationBar } from "@/components/blog/pagination-bar";
 import { PostCard } from "@/components/blog/post-card";
 import { TagChip } from "@/components/blog/tag-chip";
-import { posts, tags } from "@/data/mock-data";
+import { apiErrorMessages } from "@/lib/api/error";
+import { usePosts } from "@/lib/api/queries";
+import { PAGE_LIMIT } from "@/lib/api/types";
+import { pageWindow } from "@/lib/pagination";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useFeedUi } from "@/store/feed-ui-store";
-
-const PAGE_SIZE = 5;
 
 function FeedScreen() {
   const query = useFeedUi((state) => state.query);
@@ -19,29 +23,35 @@ function FeedScreen() {
   const setQuery = useFeedUi((state) => state.setQuery);
   const setTag = useFeedUi((state) => state.setTag);
   const setPage = useFeedUi((state) => state.setPage);
+  const search = useDebouncedValue(query.trim(), 300);
+  const [knownTags, setKnownTags] = useState<string[]>([]);
 
-  const normalized = query.trim().toLowerCase();
-  const filtered = posts.filter((post) => {
-    const matchesTag = !tag || post.tags.includes(tag);
-    if (!matchesTag) return false;
-    if (!normalized) return true;
-    const haystack = [post.title, post.content, post.author.name, ...post.tags]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(normalized);
+  const postsQuery = usePosts({
+    page,
+    limit: PAGE_LIMIT,
+    search,
+    tag: tag ?? undefined,
   });
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
+  useEffect(() => {
+    if (tag || !postsQuery.data) return;
+    const names = postsQuery.data.items.flatMap((post) => post.tags);
+    if (names.length === 0) return;
+    setKnownTags((current) => {
+      const merged = new Set([...current, ...names]);
+      return [...merged].sort((a, b) => a.localeCompare(b));
+    });
+  }, [postsQuery.data, tag]);
+
+  const total = postsQuery.data?.total ?? 0;
+  const items = postsQuery.data?.items ?? [];
+  const { start, end, pageCount } = pageWindow(page, PAGE_LIMIT, items.length, total);
 
   useEffect(() => {
-    if (filtered.length > 0 && page > pageCount) setPage(pageCount);
-  }, [filtered.length, page, pageCount, setPage]);
+    if (postsQuery.data && page > pageCount) setPage(pageCount);
+  }, [page, pageCount, postsQuery.data, setPage]);
 
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const visible = filtered.slice(startIndex, startIndex + PAGE_SIZE);
-  const start = filtered.length === 0 ? 0 : startIndex + 1;
-  const end = startIndex + visible.length;
+  if (postsQuery.isLoading) return <FeedSkeleton />;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12">
@@ -68,7 +78,7 @@ function FeedScreen() {
             id="feed-search"
             type="search"
             value={query}
-            placeholder="Search by title, author, or tag"
+            placeholder="Search by title or text"
             autoComplete="off"
             className="h-11 w-full rounded-lg border border-border bg-card pr-3 pl-9 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/30"
             onChange={(event) => setQuery(event.target.value)}
@@ -77,35 +87,61 @@ function FeedScreen() {
       </form>
       <div className="mt-4 flex flex-wrap gap-2" role="toolbar" aria-label="Filter by tag">
         <TagChip label="All" pressed={tag === null} onClick={() => setTag(null)} />
-        {tags.map((item) => (
+        {knownTags.map((name) => (
           <TagChip
-            key={item.id}
-            label={item.name}
-            pressed={tag === item.name}
-            onClick={() => setTag(tag === item.name ? null : item.name)}
+            key={name}
+            label={name}
+            pressed={tag === name}
+            onClick={() => setTag(tag === name ? null : name)}
           />
         ))}
+        {tag && !knownTags.includes(tag) ? (
+          <TagChip label={tag} pressed onClick={() => setTag(null)} />
+        ) : null}
       </div>
-      {filtered.length === 0 ? (
-        <EmptyFeed />
+      {postsQuery.isError ? (
+        <div className="mt-8">
+          <ApiAlert messages={apiErrorMessages(postsQuery.error)} />
+          <button
+            type="button"
+            className="mt-3 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
+            onClick={() => postsQuery.refetch()}
+          >
+            Try again
+          </button>
+        </div>
+      ) : total === 0 ? (
+        search || tag ? (
+          <EmptyFeed />
+        ) : (
+          <div
+            role="status"
+            className="mt-8 rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center"
+          >
+            <h2 className="font-serif text-2xl text-foreground">No posts yet</h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+              When someone publishes, it will show up here.
+            </p>
+          </div>
+        )
       ) : (
-        <>
+        <div aria-busy={postsQuery.isFetching}>
           <ul className="mt-8 space-y-4">
-            {visible.map((post) => (
+            {items.map((post) => (
               <li key={post.id}>
                 <PostCard post={post} />
               </li>
             ))}
           </ul>
           <PaginationBar
-            page={currentPage}
+            page={Math.min(page, pageCount)}
             pageCount={pageCount}
             start={start}
             end={end}
-            total={filtered.length}
+            total={total}
             onPageChange={setPage}
           />
-        </>
+        </div>
       )}
     </div>
   );

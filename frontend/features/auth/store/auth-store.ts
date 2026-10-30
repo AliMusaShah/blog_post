@@ -1,21 +1,41 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { AuthState } from "../types/auth-types";
 
+import type { User } from "@/lib/api/types";
 
+import type { AuthState } from "../types/auth-types";
+
+function isUser(value: unknown): value is User {
+  if (typeof value !== "object" || value === null) return false;
+  const user = value as Partial<User>;
+  return (
+    typeof user.id === "string" &&
+    typeof user.name === "string" &&
+    typeof user.email === "string" &&
+    (user.role === "USER" || user.role === "ADMIN") &&
+    typeof user.createdAt === "string"
+  );
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
       access: null,
-      refresh: null,
-      setAuth: ({ user, access, refresh }) =>
-        set((s) => ({ user: user ?? s.user, access, refresh: refresh ?? s.refresh })),
-      setAccess: (access, refresh) =>
-        set((s) => ({ access, refresh: refresh ?? s.refresh })),
-      logout: () => set({ user: null, access: null, refresh: null }),
+      setAuth: ({ user, access }) => set({ user, access }),
+      setUser: (user) => set({ user }),
+      logout: () => set({ user: null, access: null }),
     }),
-    { name: "auth" }
-  )
+    {
+      name: "auth",
+      version: 1,
+      partialize: (state) => ({ user: state.user, access: state.access }),
+      migrate: (persisted) => {
+        const state = persisted as { user?: unknown; access?: unknown };
+        const user = isUser(state.user) ? state.user : null;
+        const access = user && typeof state.access === "string" ? state.access : null;
+        return { user, access };
+      },
+    },
+  ),
 );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import { ApiAlert } from "@/components/blog/api-alert";
 import { TagInput } from "@/components/blog/tag-input";
 import { TextArea } from "@/components/blog/text-area";
 import { TextField } from "@/components/blog/text-field";
@@ -10,12 +11,21 @@ import { Button, buttonVariants } from "@/components/ui/button";
 
 const TITLE_LIMIT = 150;
 
+type PostFormValues = {
+  title: string;
+  content: string;
+  tags: string[];
+};
+
 type PostFormProps = {
   mode: "create" | "edit";
   cancelHref: string;
   initialTitle?: string;
   initialContent?: string;
   initialTags?: string[];
+  pending?: boolean;
+  messages?: string[];
+  onPublish: (values: PostFormValues) => Promise<void> | void;
 };
 
 function PostForm({
@@ -24,17 +34,19 @@ function PostForm({
   initialTitle = "",
   initialContent = "",
   initialTags = [],
+  pending = false,
+  messages = [],
+  onPublish,
 }: PostFormProps) {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
   const [tags, setTags] = useState(initialTags);
   const [titleError, setTitleError] = useState("");
   const [contentError, setContentError] = useState("");
-  const [previewNotice, setPreviewNotice] = useState("");
 
   const overLimit = title.length > TITLE_LIMIT;
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextTitleError = !title.trim()
       ? "Add a title before publishing."
@@ -46,11 +58,12 @@ function PostForm({
       : "Write the post before publishing.";
     setTitleError(nextTitleError);
     setContentError(nextContentError);
-    setPreviewNotice(
-      nextTitleError || nextContentError
-        ? ""
-        : "Preview only. Nothing was published.",
-    );
+    if (nextTitleError || nextContentError || pending) return;
+    await onPublish({
+      title: title.trim(),
+      content: content.trim(),
+      tags,
+    });
   }
 
   return (
@@ -60,17 +73,14 @@ function PostForm({
           Check the highlighted fields.
         </p>
       ) : null}
-      {previewNotice ? (
-        <p role="status" className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
-          {previewNotice}
-        </p>
-      ) : null}
+      {messages.length > 0 ? <ApiAlert messages={messages} /> : null}
       <TextField
         id="post-title"
         label="Title"
         value={title}
         maxLength={TITLE_LIMIT}
         error={titleError}
+        disabled={pending}
         asideId="post-title-count"
         aside={
           <span
@@ -87,7 +97,6 @@ function PostForm({
         onChange={(event) => {
           setTitle(event.target.value);
           setTitleError("");
-          setPreviewNotice("");
         }}
       />
       <TextArea
@@ -95,17 +104,17 @@ function PostForm({
         label="Content"
         value={content}
         error={contentError}
+        disabled={pending}
         className="min-h-72 font-serif text-base leading-7"
         onChange={(event) => {
           setContent(event.target.value);
           setContentError("");
-          setPreviewNotice("");
         }}
       />
       <TagInput id="post-tags" tags={tags} onChange={setTags} />
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" className="h-10 px-4">
-          Publish
+        <Button type="submit" className="h-10 px-4" disabled={pending}>
+          {pending ? "Saving…" : mode === "edit" ? "Save changes" : "Publish"}
         </Button>
         <Link
           href={cancelHref}
@@ -113,15 +122,14 @@ function PostForm({
             variant: "outline",
             className: "h-10 px-4",
           })}
+          aria-disabled={pending}
         >
           Cancel
         </Link>
-        <p className="text-sm text-muted-foreground">
-          {mode === "edit" ? "Editing a preview post." : "This editor does not save."}
-        </p>
       </div>
     </form>
   );
 }
 
 export { PostForm };
+export type { PostFormValues };

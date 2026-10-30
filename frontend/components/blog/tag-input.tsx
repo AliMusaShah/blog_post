@@ -12,11 +12,15 @@ type TagInputProps = {
   onChange: (tags: string[]) => void;
 };
 
+const TAG_LIMIT = 10;
+
 function normalize(value: string) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, "")
-    .slice(0, 24);
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 50);
 }
 
 function TagInput({ id, tags, onChange }: TagInputProps) {
@@ -34,7 +38,7 @@ function TagInput({ id, tags, onChange }: TagInputProps) {
     }
     const merged = [...tags];
     for (const name of next) {
-      if (!merged.includes(name) && merged.length < 8) merged.push(name);
+      if (!merged.includes(name) && merged.length < TAG_LIMIT) merged.push(name);
     }
     onChange(merged);
     setDraft("");

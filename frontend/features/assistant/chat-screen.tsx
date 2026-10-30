@@ -5,8 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Send } from "lucide-react";
 
+import { ArticleSkeleton } from "@/components/blog/article-skeleton";
+import { LoadError } from "@/components/blog/load-error";
+import { NotFoundView } from "@/components/blog/not-found-view";
 import { Button } from "@/components/ui/button";
-import { getPost, type Post } from "@/data/mock-data";
+import { apiErrorMessages, isNotFound } from "@/lib/api/error";
+import { usePost } from "@/lib/api/queries";
+import type { Post } from "@/lib/api/types";
 import { previewText } from "@/lib/format";
 import { usePostDraft, type PostDraft } from "@/store/post-draft-store";
 
@@ -108,10 +113,13 @@ function replyFor(text: string, post: Post | undefined, id: string): ChatMessage
 }
 
 function ChatScreen({ postId }: { postId?: string }) {
-  const post = postId ? getPost(postId) : undefined;
+  const postQuery = usePost(postId ?? "", { enabled: Boolean(postId) });
+  const post = postId ? postQuery.data : undefined;
   const router = useRouter();
   const setDraft = usePostDraft((state) => state.setDraft);
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [opening(post)]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    postId ? [] : [opening(undefined)],
+  );
   const [text, setText] = useState("");
   const [error, setError] = useState("");
   const listId = useId();
@@ -119,8 +127,25 @@ function ChatScreen({ postId }: { postId?: string }) {
   const fieldId = "assistant-message";
 
   useEffect(() => {
+    if (!post) return;
+    setMessages((current) => (current.length === 0 ? [opening(post)] : current));
+  }, [post]);
+
+  useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest" });
   }, [messages.length]);
+
+  if (postId && postQuery.isLoading) return <ArticleSkeleton />;
+  if (postId && isNotFound(postQuery.error)) return <NotFoundView />;
+  if (postId && postQuery.isError) {
+    return (
+      <LoadError
+        title="Could not load this post"
+        messages={apiErrorMessages(postQuery.error)}
+        onRetry={() => postQuery.refetch()}
+      />
+    );
+  }
 
   const suggestions = post
     ? ["Explain this post", "Suggest a clearer opening", "Draft a follow-up post"]

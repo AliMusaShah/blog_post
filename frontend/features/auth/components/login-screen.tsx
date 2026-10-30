@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
+import { ApiAlert } from "@/components/blog/api-alert";
 import { PasswordField } from "@/components/blog/password-field";
 import { TextField } from "@/components/blog/text-field";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { apiErrorMessages } from "@/lib/api/error";
+import { establishSession } from "@/lib/api/session";
+import { safeNext } from "@/lib/safe-next";
 
 function GoogleMark() {
   return (
@@ -30,17 +35,51 @@ function GoogleMark() {
   );
 }
 
+function emailError(email: string) {
+  const value = email.trim();
+  if (!value) return "Enter your email.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email.";
+  return "";
+}
+
 function LoginScreen() {
-  const [email, setEmail] = useState("maya.ellison@quill.dev");
-  const [password, setPassword] = useState("wrong-password");
-  const [showError, setShowError] = useState(true);
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+  const [messages, setMessages] = useState<string[]>([]);
+  const [pending, setPending] = useState(false);
   const [googleNotice, setGoogleNotice] = useState(false);
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextEmailError = emailError(email);
+    const nextPasswordError = password
+      ? password.length < 6
+        ? "Password must be at least 6 characters."
+        : ""
+      : "Enter your password.";
+    setFieldErrors({ email: nextEmailError, password: nextPasswordError });
+    setMessages([]);
+    if (nextEmailError || nextPasswordError) return;
+
+    setPending(true);
+    try {
+      await establishSession(email.trim(), password);
+      const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+      router.push(next);
+      router.refresh();
+    } catch (error) {
+      setMessages(apiErrorMessages(error));
+      setPending(false);
+    }
+  }
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
       <h1 className="font-serif text-4xl tracking-tight">Sign in</h1>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Continue with Google, or create an account yourself.
+        Continue with Google, or sign in with your email.
       </p>
       <div className="mt-6 flex flex-col gap-3">
         <button
@@ -53,7 +92,7 @@ function LoginScreen() {
         </button>
         {googleNotice ? (
           <p role="status" className="text-sm text-muted-foreground">
-            Google sign-in is not connected in this preview.
+            Google sign-in is not available.
           </p>
         ) : null}
         <Link
@@ -73,39 +112,41 @@ function LoginScreen() {
         </span>
         <span className="h-px flex-1 bg-border" />
       </div>
-      {showError ? (
-        <p
-          role="alert"
-          className="mt-6 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
-        >
-          Invalid email or password
-        </p>
+      {messages.length > 0 ? (
+        <div className="mt-6">
+          <ApiAlert messages={messages} />
+        </div>
       ) : null}
-      <form
-        className="mt-6 flex flex-col gap-5"
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          setShowError(true);
-        }}
-      >
+      <form className="mt-6 flex flex-col gap-5" noValidate onSubmit={onSubmit}>
         <TextField
           id="login-email"
           label="Email"
           type="email"
           autoComplete="email"
           value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          error={fieldErrors.email}
+          disabled={pending}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setFieldErrors((current) => ({ ...current, email: "" }));
+            setMessages([]);
+          }}
         />
         <PasswordField
           id="login-password"
           label="Password"
           autoComplete="current-password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
+          error={fieldErrors.password}
+          disabled={pending}
+          onChange={(event) => {
+            setPassword(event.target.value);
+            setFieldErrors((current) => ({ ...current, password: "" }));
+            setMessages([]);
+          }}
         />
-        <Button type="submit" className="h-11 w-full">
-          Log in
+        <Button type="submit" className="h-11 w-full" disabled={pending}>
+          {pending ? "Signing in…" : "Log in"}
         </Button>
       </form>
     </div>

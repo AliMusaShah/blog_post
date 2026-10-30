@@ -2,14 +2,18 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { Avatar } from "@/components/blog/avatar";
-import { currentUser } from "@/data/mock-data";
+import { useAuthStore } from "@/features/auth/store/auth-store";
 
 function UserMenu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   useLayoutEffect(() => {
     return () => setOpen(false);
@@ -34,6 +38,15 @@ function UserMenu() {
     };
   }, [open]);
 
+  if (!user) return null;
+
+  function signOut() {
+    logout();
+    setOpen(false);
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -44,8 +57,8 @@ function UserMenu() {
         aria-controls={menuId}
         onClick={() => setOpen((value) => !value)}
       >
-        <Avatar name={currentUser.name} />
-        <span className="hidden text-sm font-medium sm:inline">{currentUser.name}</span>
+        <Avatar name={user.name} />
+        <span className="hidden text-sm font-medium sm:inline">{user.name}</span>
         <span className="sr-only">Account menu</span>
       </button>
       {open ? (
@@ -56,20 +69,20 @@ function UserMenu() {
         >
           <Link
             role="menuitem"
-            href={`/users/${currentUser.id}`}
+            href={`/users/${user.id}`}
             className="block rounded-lg px-3 py-2 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
             onClick={() => setOpen(false)}
           >
             Profile
           </Link>
-          <Link
+          <button
+            type="button"
             role="menuitem"
-            href="/login"
-            className="block rounded-lg px-3 py-2 text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
-            onClick={() => setOpen(false)}
+            className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-primary/40"
+            onClick={signOut}
           >
             Log out
-          </Link>
+          </button>
         </div>
       ) : null}
     </div>

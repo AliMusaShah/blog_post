@@ -1,6 +1,6 @@
 import { cn } from "cn";
 
-import type { Role } from "@/data/mock-data";
+import type { Role } from "@/lib/api/types";
 
 function RoleBadge({ role, className }: { role: Role; className?: string }) {
   return (
